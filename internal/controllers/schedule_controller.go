@@ -6,6 +6,8 @@ import (
 	"dolittle/internal/utils"
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -47,4 +49,31 @@ func (c *ScheduleController) CreateSchedule(w http.ResponseWriter, r *http.Reque
 		"id":      id,
 		"message": "Расписание создано успешно",
 	})
+}
+
+func (c *ScheduleController) GetUserSchedule(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	queryParam := strings.TrimSpace(r.URL.Query().Get("user_id"))
+	if queryParam == "" {
+		http.Error(w, `{"error": "Не удалось получить user_id"}`, http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.ParseUint(queryParam, 10, 32)
+	if err != nil {
+		http.Error(w, `{"error": "Неверный формат user_id"}`, http.StatusBadRequest)
+		return
+	}
+
+	scheduleID, err := c.Service.FindByUserID(uint(userID))
+	if err != nil {
+		http.Error(w, `{"error": "Ошибка получения данных"}`, http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if len(scheduleID) == 0 {
+		json.NewEncoder(w).Encode([]uint{})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string][]uint{"schedules": scheduleID})
 }

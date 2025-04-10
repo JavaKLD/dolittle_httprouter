@@ -35,16 +35,42 @@ func (r *ScheduleRepo) CreateSchedule(schedule *models.Schedule) (uint, error) {
 
 func (r *ScheduleRepo) AidNameExists(aidName string, userID uint) (bool, error) {
 	var count int
-	whereQuery := `
-		SELECT COUNT(*)
-		FROM schedules
-		WHERE aid_name = ? AND user_id = ? 
+	qr := `
+	SELECT COUNT(*)
+	FROM schedules
+	WHERE aid_name = ? AND user_id = ? 
 	`
 
-	err := r.db.QueryRow(whereQuery, aidName, userID).Scan(&count)
+	err := r.db.QueryRow(qr, aidName, userID).Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("Ошибка при проверке существования записи: %v", err)
 	}
 
 	return count > 0, nil
+}
+
+func (r *ScheduleRepo) FindByUserID(userID uint) ([]uint, error) {
+	var scheduleID []uint
+	qr := `
+		SELECT id 
+		FROM schedules
+		WHERE user_id = ?
+	`
+
+	rows, err := r.db.Query(qr, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id uint
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		scheduleID = append(scheduleID, id)
+	}
+
+	return scheduleID, nil
 }

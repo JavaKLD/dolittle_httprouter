@@ -38,3 +38,7 @@ func (s *ScheduleService) CreateSchedule(schedule *models.Schedule) (uint, error
 
 	return id, nil
 }
+
+func (s *ScheduleService) FindByUserID(userID uint) ([]uint, error) {
+	return s.Repo.FindByUserID(userID)
+}

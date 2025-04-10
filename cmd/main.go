@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-
 	db, err := database.InitDB()
 	if err != nil {
 		log.Fatal("Ошибка инициализации бд", err)
@@ -27,6 +26,8 @@ func main() {
 	router := httprouter.New()
 
 	router.POST("/schedule", controller.CreateSchedule)
+	router.GET("/schedules", controller.GetUserSchedule)
 
+	log.Println("Сервер запущен на :8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
